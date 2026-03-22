@@ -1,48 +1,140 @@
 <!DOCTYPE html>
 <html lang="en">
-  
 <head>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+  <title>Notes App</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: linear-gradient(to right, #667eea, #764ba2);
+      margin: 0;
+      padding: 0;
+    }
+
+    .navbar {
+      background: white;
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    .container {
+      width: 80%;
+      margin: 30px auto;
+    }
+
+    .note-input {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      margin-bottom: 20px;
+    }
+
+    input {
+      padding: 10px;
+      width: 70%;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      padding: 10px 15px;
+      background: #667eea;
+      border: none;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+
+    button:hover {
+      background: #5a67d8;
+    }
+
+    .notes {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 15px;
+    }
+
+    .note-card {
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.2);
+    }
+  </style>
 </head>
+
 <body>
-  <div style="display: flex; justify-content: space-between; padding:0px  100px;">
-    <div id="response">
-      Loading..,
-    </div>
-    <div>
-      <input type="text" id="note">
-      <button onclick="add()">Create new note</button>
-    </div>
+
+  <div class="navbar">
+    <h2>My Notes</h2>
+    <button onclick="logout()">Logout</button>
   </div>
+
+  <div class="container">
+
+    <div class="note-input">
+      <input type="text" id="note" placeholder="Write a note...">
+      <button onclick="add()">Add Note</button>
+    </div>
+
+    <div id="response" class="notes">
+      Loading...
+    </div>
+
+  </div>
+
 <script>
 
   async function getTodos(){
-    const response=await axios.get("http://localhost:3000/notes");
-    const notes=response.data.notes;
-    document.getElementById("response").innerHTML="";
-    for(let i=0;i<notes.length;i++){
-      const noteNote=document.createElement("div");
-      noteNote.innerHTML=notes[i];
-      noteNote.setAttribute("style","border:2px solid black;padding:10px;margin:10px;")
-      document.getElementById("response").appendChild(noteNote);
-     }
-  }
-  async function add(){
-    const note=document.getElementById("note").value;
-    const response=await axios.post("http://localhost:3000/notes",{
-      note:note
+    const response = await axios.get("http://localhost:3000/notes",{
+      headers:{
+        token: localStorage.getItem("token")
+      }
     });
-    const noteNote=document.createElement("div");
-    noteNote.innerHTML=note;
-    noteNote.setAttribute("style","border:2px solid black;padding:10px;margin:10px")
-    document.getElementById("response").appendChild(noteNote);
-    document.getElementById("note").value="";
 
+    const notes = response.data.notes;
+    document.getElementById("response").innerHTML = "";
+
+    for(let i=0;i<notes.length;i++){
+      const noteDiv = document.createElement("div");
+      noteDiv.className = "note-card";
+      noteDiv.innerHTML = notes[i].note;
+      document.getElementById("response").appendChild(noteDiv);
+    }
   }
+
+  async function add(){
+    const note = document.getElementById("note").value;
+
+    await axios.post("http://localhost:3000/notes",
+      { note: note },
+      {
+        headers:{
+          token: localStorage.getItem("token")
+        }
+      }
+    );
+
+    document.getElementById("note").value = "";
+    getTodos();
+  }
+
+  function logout(){
+    localStorage.removeItem("token");
+    window.location = "/signin";
+  }
+
   getTodos();
+
 </script>
+
 </body>
 </html>
